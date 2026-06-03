@@ -520,7 +520,7 @@ class IEAApp:
                 filename = os.path.basename(filepath)
                 self.root.after(0, lambda: self._append_chat(
                     self.current_chat_user,
-                    f"[You]: 📷 Sent encrypted image: {filename} ({len(image_bytes)} bytes)"
+                    f"[You]: Sent encrypted image: {filename} ({len(image_bytes)} bytes)"
                 ))
             except Exception as e:
                 self.root.after(0, lambda: messagebox.showerror("Error", f"Image send failed: {e}"))
@@ -599,7 +599,7 @@ class IEAApp:
         signature_str = msg.get("signature", "")
         filename = msg.get("filename", "image.enc")
 
-        self._append_chat(sender, f"[{sender}]: 📷 Received encrypted image...")
+        self._append_chat(sender, f"[{sender}]: Received encrypted image...")
 
         def decrypt_and_save():
             try:
@@ -652,7 +652,7 @@ class IEAApp:
                 with open(save_path, "wb") as f:
                     f.write(decrypted_image)
 
-                sig_text = "✓ Valid" if sig_valid else "✗ Invalid/Unverified"
+                sig_text = "Valid" if sig_valid else "Invalid/Unverified"
                 self.root.after(0, lambda: self._append_chat(
                     sender,
                     f"[SYSTEM] Image decrypted and saved: {save_name}\n"
