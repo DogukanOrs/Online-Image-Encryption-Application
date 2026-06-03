@@ -21,23 +21,13 @@ import random
 import os
 
 
-# ---------------------------------------------------------------------------
-# Low-level math utilities
-# ---------------------------------------------------------------------------
-
 def _gcd(a: int, b: int) -> int:
-    """Compute the Greatest Common Divisor of *a* and *b* (Euclidean algo)."""
     while b:
         a, b = b, a % b
     return a
 
 
 def _extended_gcd(a: int, b: int) -> tuple:
-    """
-    Extended Euclidean Algorithm.
-
-    Returns (gcd, x, y) such that  a*x + b*y == gcd(a, b).
-    """
     if a == 0:
         return b, 0, 1
     gcd, x1, y1 = _extended_gcd(b % a, a)
@@ -59,11 +49,7 @@ def mod_inverse(e: int, phi: int) -> int:
     return x % phi
 
 
-# ---------------------------------------------------------------------------
 # Primality testing  (Miller-Rabin)
-# ---------------------------------------------------------------------------
-
-# Small primes used for a quick trial-division pre-screen.
 _SMALL_PRIMES = [
     2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,
     59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113,
@@ -83,13 +69,8 @@ _SMALL_PRIMES = [
 
 
 def _is_miller_rabin_witness(a: int, d: int, n: int, r: int) -> bool:
-    """
-    Test whether *a* is a Miller-Rabin witness for the compositeness of *n*.
-
-    *n - 1* must equal *d * 2**r*  where *d* is odd.
-    Returns True if *a* proves *n* is composite.
-    """
-    # Compute a^d mod n  (using Python's efficient built-in pow)
+  
+    # Compute a^d mod n  
     x = pow(a, d, n)
 
     # If x == 1 or x == n-1, *a* is NOT a witness → n may be prime
@@ -107,17 +88,7 @@ def _is_miller_rabin_witness(a: int, d: int, n: int, r: int) -> bool:
 
 
 def is_probably_prime(n: int, k: int = 40) -> bool:
-    """
-    Miller-Rabin primality test with *k* rounds.
-
-    Returns True if *n* is probably prime, False if *n* is definitely
-    composite.  The probability of a false positive is at most 4^(-k).
-
-    Parameters
-    ----------
-    n : int — the number to test
-    k : int — number of rounds (default 40, giving ≈ 2^-80 error)
-    """
+    
     if n < 2:
         return False
     if n == 2 or n == 3:
@@ -185,21 +156,6 @@ def generate_large_prime(bits: int = 256) -> int:
 # ---------------------------------------------------------------------------
 
 def generate_rsa_keys(bits: int = 512) -> tuple:
-    """
-    Generate an RSA key pair.
-
-    Parameters
-    ----------
-    bits : int
-        Total key size in bits (default 512).  Each prime will be
-        ``bits // 2`` bits long.
-
-    Returns
-    -------
-    (public_key, private_key) where
-        public_key  = (e, n)
-        private_key = (d, n)
-    """
     prime_bits = bits // 2  # 256 bits each for 512-bit RSA
 
     # 1. Generate two distinct large primes p and q
@@ -213,7 +169,7 @@ def generate_rsa_keys(bits: int = 512) -> tuple:
     # 2. Compute n = p * q  (the modulus)
     n = p * q
 
-    # 3. Compute Euler's totient  φ(n) = (p-1)(q-1)
+    # 3. Compute Euler's totient  phi(n) = (p-1)(q-1)
     phi = (p - 1) * (q - 1)
 
     # 4. Public exponent — the standard Fermat prime
@@ -224,7 +180,7 @@ def generate_rsa_keys(bits: int = 512) -> tuple:
         # Extremely rare; just regenerate
         return generate_rsa_keys(bits)
 
-    # 5. Compute private exponent  d = e⁻¹ mod φ(n)
+    # 5. Compute private exponent  d = e⁻¹ mod phi(n)
     d = mod_inverse(e, phi)
 
     public_key = (e, n)
@@ -232,9 +188,9 @@ def generate_rsa_keys(bits: int = 512) -> tuple:
     return public_key, private_key
 
 
-# ---------------------------------------------------------------------------
+
 # Encryption / Decryption  (operate on integers)
-# ---------------------------------------------------------------------------
+
 
 def rsa_encrypt(message_int: int, public_key: tuple) -> int:
     """
@@ -263,9 +219,8 @@ def rsa_decrypt(ciphertext_int: int, private_key: tuple) -> int:
     return pow(ciphertext_int, d, n)
 
 
-# ---------------------------------------------------------------------------
-# Byte ↔ Integer conversion helpers
-# ---------------------------------------------------------------------------
+# Byte - Integer conversion helpers
+
 
 def bytes_to_int(data: bytes) -> int:
     """Convert a byte string to a non-negative integer (big-endian)."""
@@ -287,9 +242,8 @@ def int_to_bytes(number: int) -> bytes:
     return number.to_bytes(byte_length, byteorder="big")
 
 
-# ---------------------------------------------------------------------------
+
 # Self-test
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     print("=" * 60)
