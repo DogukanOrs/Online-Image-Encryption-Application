@@ -1,0 +1,49 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# Test / coverage
+.pytest_cache/
+coverage.xml
+
+# SQLite database files
+*.db
+iea_database.db
+
+# Encrypted / received image folders (runtime)
+encrypted_images/
+received_images/
+
+# Logs
+*.log
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+
+# Private keys / certificates
+*.pem
+*.key
+
+# Mypy / tooling
+.mypy_cache/
