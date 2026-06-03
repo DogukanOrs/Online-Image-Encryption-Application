@@ -662,8 +662,9 @@ class IEAApp:
                 ))
 
             except Exception as e:
-                self.root.after(0, lambda: self._append_chat(
-                    sender, f"[SYSTEM] Image decryption failed: {e}"
+                err_msg = str(e)
+                self.root.after(0, lambda m=err_msg: self._append_chat(
+                    sender, f"[SYSTEM] Image decryption failed: {m}"
                 ))
 
         threading.Thread(target=decrypt_and_save, daemon=True).start()
