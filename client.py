@@ -26,7 +26,7 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import BUFFER_SIZE
-from crypto_utils.des import des_encrypt, des_decrypt
+from crypto_utils.des_algorithm import des_encrypt, des_decrypt
 from crypto_utils.rsa import (
     rsa_encrypt, rsa_decrypt, bytes_to_int, int_to_bytes, generate_rsa_keys
 )
