@@ -190,7 +190,7 @@ class IEAClient:
 
 
 class IEAApp:
-    """Tkinter GUI for the IEA Client."""
+    #tkinter
 
     def __init__(self):
         self.client = IEAClient()
@@ -208,10 +208,9 @@ class IEAApp:
         self._build_login_screen()
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
-    # ---- Login Screen ----
+    #  Login Screen 
 
     def _build_login_screen(self):
-        """Build the login/register screen."""
         self._clear_root()
 
         frame = tk.Frame(self.root, padx=30, pady=30)

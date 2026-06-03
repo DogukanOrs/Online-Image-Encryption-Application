@@ -12,49 +12,27 @@ from crypto_utils.rsa import rsa_encrypt, rsa_decrypt, bytes_to_int, int_to_byte
 
 
 def sign(data, private_key):
-    """
-    Create a digital signature for data.
-
-    Args:
-        data: bytes to sign
-        private_key: (d, n) RSA private key tuple
-
-    Returns:
-        signature as integer
-    """
-    # Hash the data with SHA-256
     hash_bytes = sha256_bytes(data)
     hash_int = bytes_to_int(hash_bytes)
 
-    # Sign (encrypt hash with private key)
-    # Note: In RSA signatures, we "encrypt" with the private key
-    # This is just modular exponentiation: hash^d mod n
+    #encrypt hash with private key
+    #mod ex hash^d mod n
     d, n = private_key
     signature = pow(hash_int, d, n)
     return signature
 
 
 def verify(data, signature, public_key):
-    """
-    Verify a digital signature.
-
-    Args:
-        data: original bytes that were signed
-        signature: signature integer to verify
-        public_key: (e, n) RSA public key tuple
-
-    Returns:
-        True if signature is valid, False otherwise
-    """
-    # Hash the data with SHA-256
+    
+    # SHA-256 hash data 
     hash_bytes = sha256_bytes(data)
     hash_int = bytes_to_int(hash_bytes)
 
-    # "Decrypt" the signature with public key: sig^e mod n
+    #decrypt sign^e mod n
     e, n = public_key
     recovered_hash = pow(signature, e, n)
 
-    # Compare
+    # check if they are same - no outherchange
     return recovered_hash == hash_int
 
 

@@ -96,7 +96,7 @@ def is_probably_prime(n: int, k: int = 40) -> bool:
     if n % 2 == 0:
         return False
 
-    # Quick trial division against small primes
+    # try small primes
     for p in _SMALL_PRIMES:
         if n == p:
             return True
@@ -109,7 +109,7 @@ def is_probably_prime(n: int, k: int = 40) -> bool:
         d //= 2
         r += 1
 
-    # Run k rounds with random witnesses
+    # k rounds 
     for _ in range(k):
         a = random.randrange(2, n - 1)
         if _is_miller_rabin_witness(a, d, n, r):
@@ -123,13 +123,7 @@ def is_probably_prime(n: int, k: int = 40) -> bool:
 # ---------------------------------------------------------------------------
 
 def _generate_prime_candidate(bits: int) -> int:
-    """
-    Generate a random odd integer of exactly *bits* bits.
 
-    The MSB and LSB are forced to 1 so that:
-      - the number has exactly the requested bit-length, and
-      - the number is odd (potential prime).
-    """
     # Generate random bytes, convert to int
     n = int.from_bytes(os.urandom(bits // 8), byteorder="big")
     # Set the MSB to ensure the number is *bits* bits long
@@ -140,20 +134,13 @@ def _generate_prime_candidate(bits: int) -> int:
 
 
 def generate_large_prime(bits: int = 256) -> int:
-    """
-    Generate a prime number of exactly *bits* bits.
-
-    Uses random candidate generation + Miller-Rabin testing.
-    """
     while True:
         candidate = _generate_prime_candidate(bits)
         if is_probably_prime(candidate):
             return candidate
 
 
-# ---------------------------------------------------------------------------
-# RSA key generation
-# ---------------------------------------------------------------------------
+#key gen 
 
 def generate_rsa_keys(bits: int = 512) -> tuple:
     prime_bits = bits // 2  # 256 bits each for 512-bit RSA
@@ -162,25 +149,24 @@ def generate_rsa_keys(bits: int = 512) -> tuple:
     p = generate_large_prime(prime_bits)
     q = generate_large_prime(prime_bits)
 
-    # Make sure p ≠ q  (astronomically unlikely, but be safe)
+    # p ≠ q can be possible :) goddamn 
     while q == p:
         q = generate_large_prime(prime_bits)
 
-    # 2. Compute n = p * q  (the modulus)
+    # 2. Compute n = p * q  -mod-
     n = p * q
 
-    # 3. Compute Euler's totient  phi(n) = (p-1)(q-1)
+    #euler
     phi = (p - 1) * (q - 1)
 
-    # 4. Public exponent — the standard Fermat prime
+    # fermat prime (researched fast computation)
     e = 65537
 
-    # Verify gcd(e, phi) == 1  (virtually always true for random primes)
+    # check gcd(e, phi) == 1  rand primes
     if _gcd(e, phi) != 1:
-        # Extremely rare; just regenerate
         return generate_rsa_keys(bits)
 
-    # 5. Compute private exponent  d = e⁻¹ mod phi(n)
+    # d = e⁻¹ mod phi(n)
     d = mod_inverse(e, phi)
 
     public_key = (e, n)
@@ -189,17 +175,10 @@ def generate_rsa_keys(bits: int = 512) -> tuple:
 
 
 
-# Encryption / Decryption  (operate on integers)
+#enc/dec
 
 
 def rsa_encrypt(message_int: int, public_key: tuple) -> int:
-    """
-    Encrypt *message_int* with the RSA *public_key*.
-
-    Computes:  ciphertext = message_int ^ e  mod n
-
-    The message integer **must** be in the range [0, n).
-    """
     e, n = public_key
     if message_int < 0 or message_int >= n:
         raise ValueError(
@@ -210,11 +189,6 @@ def rsa_encrypt(message_int: int, public_key: tuple) -> int:
 
 
 def rsa_decrypt(ciphertext_int: int, private_key: tuple) -> int:
-    """
-    Decrypt *ciphertext_int* with the RSA *private_key*.
-
-    Computes:  message = ciphertext_int ^ d  mod n
-    """
     d, n = private_key
     return pow(ciphertext_int, d, n)
 

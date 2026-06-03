@@ -444,21 +444,40 @@ def start_server():
     server_sock.listen(10)
     server_sock.settimeout(1.0)  # 1 second timeout for accept() so we can check 'running'
 
-    # Get local IP for display
+    # Get all available local IPs for display
+    all_ips = []
+    try:
+        hostname = socket.gethostname()
+        for info in socket.getaddrinfo(hostname, None):
+            # info = (family, type, proto, canonname, sockaddr)
+            family, _, _, _, sockaddr = info
+            if family == socket.AF_INET:
+                ip = sockaddr[0]
+                if ip != "127.0.0.1" and ip not in all_ips:
+                    all_ips.append(ip)
+    except Exception:
+        pass
+
+    # Also try the UDP-route trick as an additional candidate
     try:
         temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         temp_sock.connect(("8.8.8.8", 80))
-        local_ip = temp_sock.getsockname()[0]
+        primary_ip = temp_sock.getsockname()[0]
         temp_sock.close()
+        if primary_ip not in all_ips and primary_ip != "127.0.0.1":
+            all_ips.insert(0, primary_ip)
     except Exception:
-        local_ip = "127.0.0.1"
+        primary_ip = "127.0.0.1"
 
-    print(f"\n{'='*50}")
+    if not all_ips:
+        all_ips = ["127.0.0.1"]
+
     print(f"  IEA Server Started")
     print(f"  Listening on {SERVER_HOST}:{SERVER_PORT}")
-    print(f"  Local IP: {local_ip}:{SERVER_PORT}")
-    print(f"  Clients should connect to: {local_ip}:{SERVER_PORT}")
-    print(f"{'='*50}\n")
+    print(f"  Available network addresses:")
+    for ip in all_ips:
+        print(f"    -> {ip}:{SERVER_PORT}")
+    
 
     database.add_admin_log("SERVER_START", f"Server started on {SERVER_HOST}:{SERVER_PORT}")
 
