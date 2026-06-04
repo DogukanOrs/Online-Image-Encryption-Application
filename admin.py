@@ -100,6 +100,11 @@ class AdminClient:
         self.send_msg({"type": "ADMIN_LOGS"})
         return self.recv_msg()
 
+    def get_messages(self):
+        """Get all stored messages with encrypted content."""
+        self.send_msg({"type": "ADMIN_MESSAGES"})
+        return self.recv_msg()
+
 
 class AdminApp:
     """Tkinter GUI for admin monitoring."""
@@ -187,12 +192,47 @@ class AdminApp:
             lbl.grid(row=i // 3, column=(i % 3) * 2 + 1, sticky="w", padx=5, pady=2)
             self.stat_labels[name] = lbl
 
-        # Logs frame
-        logs_frame = tk.LabelFrame(self.root, text="Admin Logs", font=("Arial", 11, "bold"), padx=10, pady=5)
-        logs_frame.pack(fill="both", expand=True, padx=10, pady=5)
+        # Tabbed notebook for Logs and Messages
+        notebook = ttk.Notebook(self.root)
+        notebook.pack(fill="both", expand=True, padx=10, pady=5)
 
-        self.logs_text = scrolledtext.ScrolledText(logs_frame, font=("Courier", 9), state="disabled", wrap="word")
+        # Tab 1: Admin Logs
+        logs_tab = tk.Frame(notebook)
+        notebook.add(logs_tab, text="Admin Logs")
+
+        self.logs_text = scrolledtext.ScrolledText(logs_tab, font=("Courier", 9), state="disabled", wrap="word")
         self.logs_text.pack(fill="both", expand=True)
+
+        # Tab 2: Message Logs (encrypted content)
+        messages_tab = tk.Frame(notebook)
+        notebook.add(messages_tab, text="Message Logs (Encrypted)")
+
+        # Treeview table for messages
+        columns = ("id", "sender", "receiver", "content", "sha256", "type", "timestamp")
+        self.msg_tree = ttk.Treeview(messages_tab, columns=columns, show="headings", height=15)
+
+        self.msg_tree.heading("id", text="ID")
+        self.msg_tree.heading("sender", text="Sender")
+        self.msg_tree.heading("receiver", text="Receiver")
+        self.msg_tree.heading("content", text="Encrypted Content")
+        self.msg_tree.heading("sha256", text="SHA-256 Hash")
+        self.msg_tree.heading("type", text="Type")
+        self.msg_tree.heading("timestamp", text="Timestamp")
+
+        self.msg_tree.column("id", width=40, anchor="center")
+        self.msg_tree.column("sender", width=80, anchor="center")
+        self.msg_tree.column("receiver", width=80, anchor="center")
+        self.msg_tree.column("content", width=220, anchor="w")
+        self.msg_tree.column("sha256", width=180, anchor="w")
+        self.msg_tree.column("type", width=50, anchor="center")
+        self.msg_tree.column("timestamp", width=130, anchor="center")
+
+        # Scrollbar for treeview
+        msg_scrollbar = ttk.Scrollbar(messages_tab, orient="vertical", command=self.msg_tree.yview)
+        self.msg_tree.configure(yscrollcommand=msg_scrollbar.set)
+
+        self.msg_tree.pack(side="left", fill="both", expand=True)
+        msg_scrollbar.pack(side="right", fill="y")
 
         # Initial refresh
         self._refresh_all()
@@ -230,6 +270,29 @@ class AdminApp:
                 details = log.get("details", "")
                 self.logs_text.insert("end", f"[{ts}] {event}: {details}\n")
             self.logs_text.config(state="disabled")
+
+        # Get messages (encrypted content)
+        if hasattr(self, "msg_tree"):
+            messages_response = self.client.get_messages()
+            if messages_response and messages_response.get("type") == "ADMIN_MESSAGES_RESPONSE":
+                # Clear existing rows
+                for item in self.msg_tree.get_children():
+                    self.msg_tree.delete(item)
+
+                messages = messages_response.get("messages", [])
+                for msg in messages:
+                    ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg.get("timestamp", 0)))
+                    msg_type = "Image" if msg.get("is_image", 0) else "Text"
+                    sha_hash = msg.get("sha256", "")
+                    self.msg_tree.insert("", "end", values=(
+                        msg.get("id", ""),
+                        msg.get("sender", ""),
+                        msg.get("receiver", ""),
+                        msg.get("content", ""),
+                        sha_hash,
+                        msg_type,
+                        ts
+                    ))
 
     def _toggle_auto_refresh(self):
         """Toggle auto-refresh."""

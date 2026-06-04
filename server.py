@@ -30,6 +30,7 @@ from config import (
 )
 import database
 from crypto_utils.rsa import generate_rsa_keys
+from crypto_utils.sha256 import sha256
 
 
 # ---- Global State ----
@@ -140,6 +141,9 @@ def handle_client(client_sock, client_addr):
 
             elif msg_type == "ADMIN_LOGS":
                 handle_admin_logs(client_sock)
+
+            elif msg_type == "ADMIN_MESSAGES":
+                handle_admin_messages(client_sock)
 
             else:
                 send_message(client_sock, {"type": "ERROR", "message": f"Unknown message type: {msg_type}"})
@@ -366,6 +370,15 @@ def handle_admin_logs(sock):
     """Send recent admin logs."""
     logs = database.get_admin_logs()
     send_message(sock, {"type": "ADMIN_LOGS_RESPONSE", "logs": logs})
+
+
+def handle_admin_messages(sock):
+    """Send all stored messages (with encrypted content and SHA-256 hash) to admin."""
+    messages = database.get_all_messages()
+    for msg in messages:
+        content = msg.get("content", "")
+        msg["sha256"] = sha256(content.encode("utf-8"))
+    send_message(sock, {"type": "ADMIN_MESSAGES_RESPONSE", "messages": messages})
 
 
 # ---- Broadcast ----

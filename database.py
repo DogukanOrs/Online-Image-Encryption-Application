@@ -197,6 +197,17 @@ def get_message_count():
     return row["cnt"]
 
 
+def get_all_messages(limit=100):
+    """Get all messages with encrypted content for admin viewing."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT id, sender, receiver, content, is_image, timestamp FROM messages ORDER BY timestamp DESC LIMIT ?",
+        (limit,)
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 # ---- Image operations ----
 
 def save_image_record(sender, receiver, filename, encrypted_key, signature):
